@@ -1244,12 +1244,19 @@ namespace Terminal.Gui {
 				keyModifiers.Scrolllock = scrolllock;
 
 			var ConsoleKeyInfo = new ConsoleKeyInfo (keyEvent.UnicodeChar, (ConsoleKey)keyEvent.wVirtualKeyCode, shift, alt, control);
-			ConsoleKeyInfo = RemapPacketKey (ConsoleKeyInfo);
 			return new WindowsConsole.ConsoleKeyInfoEx (ConsoleKeyInfo, capslock, numlock);
 		}
 
 		public Key MapKey (WindowsConsole.ConsoleKeyInfoEx keyInfoEx)
 		{
+			// If keystroke is a virtual key
+			if (keyInfoEx.consoleKeyInfo.Key == ConsoleKey.Packet) {
+
+				// try to map the 'char' that came with it into a Key
+				if (TryRemapPacketKey (keyInfoEx.consoleKeyInfo, out var result)) {
+					return result;
+				}
+			}
 			var keyInfo = keyInfoEx.consoleKeyInfo;
 			switch (keyInfo.Key) {
 			case ConsoleKey.Escape:
@@ -1764,32 +1771,40 @@ namespace Terminal.Gui {
 		/// returning a new <see cref="ConsoleKeyInfo"/> where key is remapped
 		/// by parsing the Unicode char data of the <see cref="ConsoleKeyInfo"/>
 		/// </summary>
-		internal static ConsoleKeyInfo RemapPacketKey (ConsoleKeyInfo original)
+		/// <exception cref="ArgumentException">Thrown if passed key was not a <see cref="ConsoleKey.Packet"/></exception>
+		internal static bool TryRemapPacketKey (ConsoleKeyInfo original, out Key result)
 		{
+			result = default (Key);
+			var c = original.KeyChar;
+
 			if (original.Key != ConsoleKey.Packet)
-				return original;
+				throw new ArgumentException ("Expected a ConsoleKeyInfo with a Key of Packet", nameof (original));
 
-			// If the key struck was virtual
-			// Try to parse the unicode key e.g. 'A' into a value in ConsoleKey
-			// so that other parts of the program consider it as a regular button
-			// press
-			ConsoleKey remappedkey;
-			if (TryParseConsoleKey (
-				// have to turn e.g. 'a' to something parseable as
-				// an enum value (i.e. Upper it)
-				original.KeyChar.ToString ()?.ToUpper (),
-				out remappedkey)) {
-				return new ConsoleKeyInfo (
-					original.KeyChar,
-					remappedkey,
-					original.Modifiers.HasFlag (ConsoleModifiers.Shift),
-					original.Modifiers.HasFlag (ConsoleModifiers.Alt),
-					original.Modifiers.HasFlag (ConsoleModifiers.Control)
-				);
-
+			if (c == '\0') {
+				return false;
 			}
 
-			return original;
+			switch (c) {
+			case '\t':
+				result = original.Modifiers == ConsoleModifiers.Shift ? Key.BackTab : Key.Tab;
+				return true;
+			case '\u001b':
+				result = Key.Esc;
+				return true;
+			case '\b':
+				result = Key.Backspace;
+				return true;
+			case '\n':
+			case '\r':
+				result = Key.Enter;
+				return true;
+
+			// do not have a explicit mapping and char is nonzero so 
+			// we can just treat the `Key` as a regular unicode entry
+			default:
+				result = (Key)c;
+				return true;
+			};
 		}
 
 		private static bool TryParseConsoleKey (string c, out ConsoleKey remappedkey)
