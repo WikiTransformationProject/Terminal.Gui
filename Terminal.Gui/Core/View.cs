@@ -1522,9 +1522,13 @@ namespace Terminal.Gui {
 				containerBounds.Y = Math.Max (containerBounds.Y, Driver.Clip.Y);
 				containerBounds.Width = Math.Min (containerBounds.Width, Driver.Clip.Width);
 				containerBounds.Height = Math.Min (containerBounds.Height, Driver.Clip.Height);
-				TextFormatter?.Draw (ViewToScreen (Bounds), HasFocus ? ColorScheme.Focus : GetNormalColor (),
-				    HasFocus ? ColorScheme.HotFocus : Enabled ? ColorScheme.HotNormal : ColorScheme.Disabled,
-				    containerBounds);
+				try {
+					TextFormatter?.Draw (ViewToScreen (Bounds), HasFocus ? ColorScheme.Focus : GetNormalColor (),
+					    HasFocus ? ColorScheme.HotFocus : Enabled ? ColorScheme.HotNormal : ColorScheme.Disabled,
+					    containerBounds);
+				} catch {
+					// in concurrent scenarios the ColorScheme can be null (removing components while redrawing)
+				}
 			}
 
 			// Invoke DrawContentEvent
