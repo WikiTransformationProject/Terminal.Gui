@@ -239,6 +239,10 @@ namespace Terminal.Gui {
 
 		bool IsOverridden (View view)
 		{
+			// heu: seems to happen when a modal dialog is shown and the mouse clicks somewhere outside it?
+			if (null == view) {
+				return false;
+			}
 			Type t = view.GetType ();
 			MethodInfo m = t.GetMethod ("MouseEvent");
 
