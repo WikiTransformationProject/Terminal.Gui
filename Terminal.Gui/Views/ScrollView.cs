@@ -13,7 +13,6 @@
 
 using System;
 using System.Linq;
-using System.Reflection;
 
 namespace Terminal.Gui {
 	/// <summary>
@@ -30,7 +29,14 @@ namespace Terminal.Gui {
 	/// </para>
 	/// </remarks>
 	public class ScrollView : View {
-		View contentView = null;
+		private class ContentView : View {
+			public ContentView (Rect frame) : base (frame)
+			{
+				CanFocus = true;
+			}
+		}
+
+		ContentView contentView;
 		ScrollBarView vertical, horizontal;
 
 		/// <summary>
@@ -53,7 +59,7 @@ namespace Terminal.Gui {
 
 		void Initialize (Rect frame)
 		{
-			contentView = new View (frame);
+			contentView = new ContentView (frame);
 			vertical = new ScrollBarView (1, 0, isVertical: true) {
 				X = Pos.AnchorEnd (1),
 				Y = 0,
@@ -178,6 +184,12 @@ namespace Terminal.Gui {
 			set {
 				if (autoHideScrollBars != value) {
 					autoHideScrollBars = value;
+					if (Subviews.Contains (vertical)) {
+						vertical.AutoHideScrollBars = value;
+					}
+					if (Subviews.Contains (horizontal)) {
+						horizontal.AutoHideScrollBars = value;
+					}
 					SetNeedsDisplay ();
 				}
 			}
@@ -217,7 +229,7 @@ namespace Terminal.Gui {
 		/// <param name="view">The view to add to the scrollview.</param>
 		public override void Add (View view)
 		{
-			if (!IsOverridden (view)) {
+			if (!IsOverridden (view, "MouseEvent")) {
 				view.MouseEnter += View_MouseEnter;
 				view.MouseLeave += View_MouseLeave;
 			}
@@ -225,28 +237,58 @@ namespace Terminal.Gui {
 			SetNeedsLayout ();
 		}
 
+		/// <summary>
+		/// Removes the view from the scrollview.
+		/// </summary>
+		/// <param name="view">The view to remove from the scrollview.</param>
+		public override void Remove (View view)
+		{
+			if (view == null) {
+				return;
+			}
+
+			SetNeedsDisplay ();
+			var container = view?.SuperView;
+			if (container == this) {
+				base.Remove (view);
+			} else {
+				container?.Remove (view);
+			}
+
+			if (contentView.InternalSubviews.Count < 1) {
+				this.CanFocus = false;
+			}
+		}
+
+		/// <summary>
+		///   Removes all widgets from this container.
+		/// </summary>
+		/// <remarks>
+		/// </remarks>
+		public override void RemoveAll ()
+		{
+			contentView.RemoveAll ();
+		}
+
 		void View_MouseLeave (MouseEventArgs e)
 		{
-			if (Application.mouseGrabView != null && Application.mouseGrabView != vertical && Application.mouseGrabView != horizontal) {
+// <<<<<<< HEAD
+// 			// heu: seems to happen when a modal dialog is shown and the mouse clicks somewhere outside it?
+// 			if (null == view) {
+// 				return false;
+// 			}
+// 			Type t = view.GetType ();
+// 			MethodInfo m = t.GetMethod ("MouseEvent");
+// =======
+			if (Application.MouseGrabView != null && Application.MouseGrabView != vertical && Application.MouseGrabView != horizontal) {
 				Application.UngrabMouse ();
 			}
 		}
+// >>>>>>> upstream/develop
 
 		void View_MouseEnter (MouseEventArgs e)
 		{
 			Application.GrabMouse (this);
-		}
-
-		bool IsOverridden (View view)
-		{
-			// heu: seems to happen when a modal dialog is shown and the mouse clicks somewhere outside it?
-			if (null == view) {
-				return false;
-			}
-			Type t = view.GetType ();
-			MethodInfo m = t.GetMethod ("MouseEvent");
-
-			return (m.DeclaringType == t || m.ReflectedType == t) && m.GetBaseDefinition ().DeclaringType == typeof (Responder);
 		}
 
 		/// <summary>
@@ -264,6 +306,8 @@ namespace Terminal.Gui {
 				SetNeedsLayout ();
 				if (value) {
 					base.Add (horizontal);
+					horizontal.ShowScrollIndicator = value;
+					horizontal.AutoHideScrollBars = autoHideScrollBars;
 					horizontal.OtherScrollBarView = vertical;
 					horizontal.OtherScrollBarView.ShowScrollIndicator = value;
 					horizontal.MouseEnter += View_MouseEnter;
@@ -276,16 +320,6 @@ namespace Terminal.Gui {
 				}
 				vertical.Height = Dim.Fill (showHorizontalScrollIndicator ? 1 : 0);
 			}
-		}
-
-		/// <summary>
-		///   Removes all widgets from this container.
-		/// </summary>
-		/// <remarks>
-		/// </remarks>
-		public override void RemoveAll ()
-		{
-			contentView.RemoveAll ();
 		}
 
 		/// <summary>
@@ -303,6 +337,8 @@ namespace Terminal.Gui {
 				SetNeedsLayout ();
 				if (value) {
 					base.Add (vertical);
+					vertical.ShowScrollIndicator = value;
+					vertical.AutoHideScrollBars = autoHideScrollBars;
 					vertical.OtherScrollBarView = horizontal;
 					vertical.OtherScrollBarView.ShowScrollIndicator = value;
 					vertical.MouseEnter += View_MouseEnter;
@@ -322,7 +358,7 @@ namespace Terminal.Gui {
 		{
 			Driver.SetAttribute (GetNormalColor ());
 			SetViewsNeedsDisplay ();
-			Clear ();
+			//Clear ();
 
 			var savedClip = ClipToBounds ();
 			OnDrawContent (new Rect (ContentOffset,
@@ -335,15 +371,17 @@ namespace Terminal.Gui {
 				ShowHideScrollBars ();
 			} else {
 				if (ShowVerticalScrollIndicator) {
+					vertical.SetRelativeLayout (Bounds);
 					vertical.Redraw (vertical.Bounds);
 				}
 
 				if (ShowHorizontalScrollIndicator) {
+					horizontal.SetRelativeLayout (Bounds);
 					horizontal.Redraw (horizontal.Bounds);
 				}
 			}
 
-			// Fill in the bottom left corner
+			// Fill in the bottom right corner
 			if (ShowVerticalScrollIndicator && ShowHorizontalScrollIndicator) {
 				AddRune (Bounds.Width - 1, Bounds.Height - 1, ' ');
 			}
@@ -502,7 +540,7 @@ namespace Terminal.Gui {
 		{
 			if (me.Flags != MouseFlags.WheeledDown && me.Flags != MouseFlags.WheeledUp &&
 				me.Flags != MouseFlags.WheeledRight && me.Flags != MouseFlags.WheeledLeft &&
-				me.Flags != MouseFlags.Button1Pressed && me.Flags != MouseFlags.Button1Clicked &&
+//				me.Flags != MouseFlags.Button1Pressed && me.Flags != MouseFlags.Button1Clicked &&
 				!me.Flags.HasFlag (MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition)) {
 				return false;
 			}
@@ -519,9 +557,8 @@ namespace Terminal.Gui {
 				vertical.MouseEvent (me);
 			} else if (me.Y == horizontal.Frame.Y && ShowHorizontalScrollIndicator) {
 				horizontal.MouseEvent (me);
-			} else if (IsOverridden (me.View)) {
+			} else if (IsOverridden (me.View, "MouseEvent")) {
 				Application.UngrabMouse ();
-				return false;
 			}
 			return true;
 		}

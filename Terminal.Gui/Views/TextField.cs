@@ -235,7 +235,10 @@ namespace Terminal.Gui {
 
 		private void HistoryText_ChangeText (HistoryText.HistoryTextItem obj)
 		{
-			Text = ustring.Make (obj.Lines [obj.CursorPosition.Y]);
+			if (obj == null)
+				return;
+
+			Text = ustring.Make (obj?.Lines [obj.CursorPosition.Y]);
 			CursorPosition = obj.CursorPosition.X;
 			Adjust ();
 		}
@@ -249,9 +252,9 @@ namespace Terminal.Gui {
 		///<inheritdoc/>
 		public override bool OnLeave (View view)
 		{
-			if (Application.mouseGrabView != null && Application.mouseGrabView == this)
+			if (Application.MouseGrabView != null && Application.MouseGrabView == this)
 				Application.UngrabMouse ();
-			//if (SelectedLength != 0 && !(Application.mouseGrabView is MenuBar))
+			//if (SelectedLength != 0 && !(Application.MouseGrabView is MenuBar))
 			//	ClearAllSelection ();
 
 			return base.OnLeave (view);
@@ -295,6 +298,7 @@ namespace Terminal.Gui {
 					}
 					return;
 				}
+				ClearAllSelection ();
 				text = TextModel.ToRunes (newText.NewText);
 
 				if (!Secret && !historyText.IsFromHistory) {
@@ -414,7 +418,7 @@ namespace Terminal.Gui {
 			var selColor = new Attribute (ColorScheme.Focus.Background, ColorScheme.Focus.Foreground);
 			SetSelectedStartSelectedLength ();
 
-			Driver.SetAttribute (ColorScheme.Focus);
+			Driver.SetAttribute (GetNormalColor ());
 			Move (0, 0);
 
 			int p = first;
@@ -464,6 +468,12 @@ namespace Terminal.Gui {
 				CursorPosition - ScrollOffset, 0);
 
 			Autocomplete.RenderOverlay (renderAt);
+		}
+
+		/// <inheritdoc/>
+		public override Attribute GetNormalColor ()
+		{
+			return Enabled ? ColorScheme.Focus : ColorScheme.Disabled;
 		}
 
 		Attribute GetReadOnlyColor ()
@@ -660,7 +670,7 @@ namespace Terminal.Gui {
 
 			historyText.Redo ();
 
-			//if (Clipboard.Contents == null)
+			//if (ustring.IsNullOrEmpty (Clipboard.Contents))
 			//	return true;
 			//var clip = TextModel.ToRunes (Clipboard.Contents);
 			//if (clip == null)
@@ -1043,7 +1053,7 @@ namespace Terminal.Gui {
 				int x = PositionCursor (ev);
 				isButtonReleased = false;
 				PrepareSelection (x);
-				if (Application.mouseGrabView == null) {
+				if (Application.MouseGrabView == null) {
 					Application.GrabMouse (this);
 				}
 			} else if (ev.Flags == MouseFlags.Button1Released) {
@@ -1054,8 +1064,8 @@ namespace Terminal.Gui {
 				EnsureHasFocus ();
 				int x = PositionCursor (ev);
 				int sbw = x;
-				if (x == text.Count || (x > 0 && (char)Text [x - 1] != ' '
-					|| (x > 0 && (char)Text [x] == ' '))) {
+				if (x == text.Count || (x > 0 && (char)text [x - 1] != ' ')
+					|| (x > 0 && (char)text [x] == ' ')) {
 
 					sbw = WordBackward (x);
 				}
@@ -1211,7 +1221,7 @@ namespace Terminal.Gui {
 		/// </summary>
 		public virtual void Paste ()
 		{
-			if (ReadOnly || Clipboard.Contents == null) {
+			if (ReadOnly || ustring.IsNullOrEmpty (Clipboard.Contents)) {
 				return;
 			}
 
@@ -1336,12 +1346,12 @@ namespace Terminal.Gui {
 		}
 
 		/// <inheritdoc/>
-		protected override string GetCurrentWord ()
+		protected override string GetCurrentWord (int columnOffset = 0)
 		{
 			var host = (TextField)HostControl;
 			var currentLine = host.Text.ToRuneList ();
-			var cursorPosition = Math.Min (host.CursorPosition, currentLine.Count);
-			return IdxToWord (currentLine, cursorPosition);
+			var cursorPosition = Math.Min (host.CursorPosition + columnOffset, currentLine.Count);
+			return IdxToWord (currentLine, cursorPosition, columnOffset);
 		}
 
 		/// <inheritdoc/>

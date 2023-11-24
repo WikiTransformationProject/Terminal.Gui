@@ -158,8 +158,14 @@ namespace Terminal.Gui {
 			/// </summary>
 			public event Action<TitleEventArgs> TitleChanged;
 
-			// The contentView works like the ContentView in FrameView.
-			private View contentView = new View ();
+			/// <summary>
+			/// WizardContentView is an internal implementation detail of Window. It is used to host Views added with <see cref="Add(View)"/>. 
+			/// Its ONLY reason for being is to provide a simple way for Window to expose to those SubViews that the Window's Bounds 
+			/// are actually deflated due to the border. 
+			/// </summary>
+			class WizardContentView : View { }
+
+			private WizardContentView contentView = new WizardContentView ();
 
 			/// <summary>
 			/// Sets or gets help text for the <see cref="WizardStep"/>.If <see cref="WizardStep.HelpText"/> is empty
@@ -203,11 +209,6 @@ namespace Terminal.Gui {
 
 				base.Add (contentView);
 
-				helpTextView.ColorScheme = new ColorScheme () {  
-					Normal = new Attribute(Color.Gray, Color.DarkGray),
-					Focus = new Attribute(Color.DarkGray, Color.Gray),
-					HotFocus = new Attribute(Color.White, Color.DarkGray)
-				};
 				helpTextView.ReadOnly = true;
 				helpTextView.WordWrap = true;
 				base.Add (helpTextView);
@@ -315,7 +316,11 @@ namespace Terminal.Gui {
 
 				SetNeedsDisplay ();
 				var touched = view.Frame;
-				contentView.Remove (view);
+				if (view == contentView || view.GetType().Name == "ContentView") {
+					base.Remove (view);
+				} else {
+					contentView.Remove (view);
+				}
 
 				if (contentView.InternalSubviews.Count < 1)
 					this.CanFocus = false;
@@ -388,6 +393,7 @@ namespace Terminal.Gui {
 				AddKeyBinding (Key.Esc, Command.QuitToplevel);
 			}
 
+			Initialized += (s, e) => Wizard_Loaded ();
 		}
 
 		private void Wizard_Loaded ()

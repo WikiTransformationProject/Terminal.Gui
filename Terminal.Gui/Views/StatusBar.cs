@@ -27,11 +27,13 @@ namespace Terminal.Gui {
 		/// <param name="shortcut">Shortcut to activate the <see cref="StatusItem"/>.</param>
 		/// <param name="title">Title for the <see cref="StatusItem"/>.</param>
 		/// <param name="action">Action to invoke when the <see cref="StatusItem"/> is activated.</param>
-		public StatusItem (Key shortcut, ustring title, Action action)
+		/// <param name="canExecute">Function to determine if the action can currently be executed.</param>
+		public StatusItem (Key shortcut, ustring title, Action action, Func<bool> canExecute = null)
 		{
 			Title = title ?? "";
 			Shortcut = shortcut;
 			Action = action;
+			CanExecute = canExecute;
 		}
 
 		/// <summary>
@@ -54,7 +56,28 @@ namespace Terminal.Gui {
 		/// Gets or sets the action to be invoked when the statusbar item is triggered
 		/// </summary>
 		/// <value>Action to invoke.</value>
-		public Action Action { get; }
+		public Action Action { get; set; }
+
+		/// <summary>
+		/// Gets or sets the action to be invoked to determine if the <see cref="StatusItem"/> can be triggered. 
+		/// If <see cref="CanExecute"/> returns <see langword="true"/> the status item will be enabled. Otherwise, it will be disabled.
+		/// </summary>
+		/// <value>Function to determine if the action is can be executed or not.</value>
+		public Func<bool> CanExecute { get; set; }
+
+		/// <summary>
+		/// Returns <see langword="true"/> if the status item is enabled. This method is a wrapper around <see cref="CanExecute"/>.
+		/// </summary>
+		public bool IsEnabled ()
+		{
+			return CanExecute == null ? true : CanExecute ();
+		}
+
+		/// <summary>
+		/// Gets or sets arbitrary data for the status item.
+		/// </summary>
+		/// <remarks>This property is not used internally.</remarks>
+		public object Data { get; set; }
 	};
 
 	/// <summary>
@@ -64,8 +87,6 @@ namespace Terminal.Gui {
 	/// So for each context must be a new instance of a statusbar.
 	/// </summary>
 	public class StatusBar : View {
-		bool disposedValue;
-
 		/// <summary>
 		/// The items that compose the <see cref="StatusBar"/>
 		/// </summary>
@@ -87,39 +108,9 @@ namespace Terminal.Gui {
 			CanFocus = false;
 			ColorScheme = Colors.Menu;
 			X = 0;
+			Y = Pos.AnchorEnd (1);
 			Width = Dim.Fill ();
 			Height = 1;
-
-			Initialized += StatusBar_Initialized;
-			Application.Resized += Application_Resized ();
-		}
-
-		private void StatusBar_Initialized (object sender, EventArgs e)
-		{
-			if (SuperView.Frame == Rect.Empty) {
-				((Toplevel)SuperView).Loaded += StatusBar_Loaded;
-			} else {
-				Y = Math.Max (SuperView.Frame.Height - (Visible ? 1 : 0), 0);
-			}
-		}
-
-		private void StatusBar_Loaded ()
-		{
-			Y = Math.Max (SuperView.Frame.Height - (Visible ? 1 : 0), 0);
-			((Toplevel)SuperView).Loaded -= StatusBar_Loaded;
-		}
-
-		private Action<Application.ResizedEventArgs> Application_Resized ()
-		{
-			return delegate {
-				X = 0;
-				Height = 1;
-				if (SuperView != null || SuperView is Toplevel) {
-					if (Frame.Y != SuperView.Frame.Height - (Visible ? 1 : 0)) {
-						Y = SuperView.Frame.Height - (Visible ? 1 : 0);
-					}
-				}
-			};
 		}
 
 		static ustring shortcutDelimiter = "-";
@@ -142,15 +133,20 @@ namespace Terminal.Gui {
 			return result;
 		}
 
+		Attribute DetermineColorSchemeFor (StatusItem item)
+		{
+			if (item != null) {
+				if (item.IsEnabled ()) {
+					return GetNormalColor ();
+				}
+				return ColorScheme.Disabled;
+			}
+			return GetNormalColor ();
+		}
+
 		///<inheritdoc/>
 		public override void Redraw (Rect bounds)
 		{
-			//if (Frame.Y != Driver.Rows - 1) {
-			//	Frame = new Rect (Frame.X, Driver.Rows - 1, Frame.Width, Frame.Height);
-			//	Y = Driver.Rows - 1;
-			//	SetNeedsDisplay ();
-			//}
-
 			Move (0, 0);
 			Driver.SetAttribute (GetNormalColor ());
 			for (int i = 0; i < Frame.Width; i++)
@@ -161,9 +157,12 @@ namespace Terminal.Gui {
 			Driver.SetAttribute (scheme);
 			for (int i = 0; i < Items.Length; i++) {
 				var title = Items [i].Title.ToString ();
+				Driver.SetAttribute (DetermineColorSchemeFor (Items [i]));
 				for (int n = 0; n < Items [i].Title.RuneCount; n++) {
 					if (title [n] == '~') {
-						scheme = ToggleScheme (scheme);
+						if (Items [i].IsEnabled ()) {
+							scheme = ToggleScheme (scheme);
+						}
 						continue;
 					}
 					Driver.AddRune (title [n]);
@@ -181,7 +180,9 @@ namespace Terminal.Gui {
 		{
 			foreach (var item in Items) {
 				if (kb.Key == item.Shortcut) {
-					Run (item.Action);
+					if (item.IsEnabled ()) {
+						Run (item.Action);
+					}
 					return true;
 				}
 			}
@@ -197,7 +198,10 @@ namespace Terminal.Gui {
 			int pos = 1;
 			for (int i = 0; i < Items.Length; i++) {
 				if (me.X >= pos && me.X < pos + GetItemTitleLength (Items [i].Title)) {
-					Run (Items [i].Action);
+					var item = Items [i];
+					if (item.IsEnabled ()) {
+						Run (item.Action);
+					}
 					break;
 				}
 				pos += GetItemTitleLength (Items [i].Title) + 3;
@@ -226,17 +230,6 @@ namespace Terminal.Gui {
 				action ();
 				return false;
 			});
-		}
-
-		/// <inheritdoc/>
-		protected override void Dispose (bool disposing)
-		{
-			if (!disposedValue) {
-				if (disposing) {
-					Application.Resized -= Application_Resized ();
-				}
-				disposedValue = true;
-			}
 		}
 
 		///<inheritdoc/>
