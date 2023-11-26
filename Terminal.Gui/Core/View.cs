@@ -1669,8 +1669,11 @@ namespace Terminal.Gui {
 			for (c = view.container; c != null; c = c.container)
 				if (c == this)
 					break;
-			if (c == null)
-				throw new ArgumentException ("the specified view is not part of the hierarchy of this view");
+			if (c == null) {
+				//throw new ArgumentException ("the specified view is not part of the hierarchy of this view");
+				// HEU: disabling the ArgumentException; this has always been thrown when clicking on the View in our settings dialog; culprit seems to be the PanelView, no clue how to solve otherwise; just ignoring it seems to work fine and actually sets the focus fine!?
+				return;
+			}
 
 			if (focused != null)
 				focused.SetHasFocus (false, view);
