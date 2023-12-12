@@ -243,7 +243,8 @@ namespace Terminal.Gui {
 		/// </remarks>
 		public void Pulse ()
 		{
-			if (activityPos == null) {
+			// HEU: adding activityPos.Length == 0 check as there was a case where the array was empty, leading to IndexOutOfRangeException below
+			if (activityPos == null || activityPos.Length == 0) {
 				PopulateActivityPos ();
 			}
 			if (!isActivity) {
