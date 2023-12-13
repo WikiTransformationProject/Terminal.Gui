@@ -83,6 +83,7 @@ namespace Terminal.Gui {
 							foreach (var view in selectedTab.View.Subviews) {
 								contentView.Remove (view);
 							}
+							contentView.Remove (selectedTab.View);
 						}
 					}
 				}
@@ -96,6 +97,7 @@ namespace Terminal.Gui {
 						if (selectedTab.View.Subviews.Count == 0) {
 							contentView.Add (selectedTab.View);
 						} else {
+							contentView.Add (selectedTab.View);
 							foreach (var view in selectedTab.View.Subviews) {
 								contentView.Add (view);
 							}
