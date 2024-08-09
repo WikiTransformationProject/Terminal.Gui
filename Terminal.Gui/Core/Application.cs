@@ -53,7 +53,7 @@ namespace Terminal.Gui {
 	///   </para>
 	///   <para>
 	///     When invoked sets the SynchronizationContext to one that is tied
-	///     to the mainloop, allowing user code to use async/await.
+	///     to the MainLoop, allowing user code to use async/await.
 	///   </para>
 	/// </remarks>
 	public static class Application {
@@ -1037,12 +1037,11 @@ namespace Terminal.Gui {
 			toplevel.LayoutSubviews ();
 			toplevel.PositionToplevels ();
 			toplevel.WillPresent ();
+			EnsuresTopOnFront ();
 			if (refreshDriver) {
 				MdiTop?.OnChildLoaded (toplevel);
 				toplevel.OnLoaded ();
-				Redraw (toplevel);
-				toplevel.PositionCursor ();
-				Driver.Refresh ();
+				Refresh ();
 			}
 
 			NotifyNewRunState?.Invoke (rs);
@@ -1135,9 +1134,9 @@ namespace Terminal.Gui {
 
 			// BUGBUG: MdiTop is not cleared here, but it should be?
 
-			MainLoop = null;
 			Driver?.End ();
 			Driver = null;
+			MainLoop = null;
 			Iteration = null;
 			RootMouseEvent = null;
 			RootKeyEvent = null;

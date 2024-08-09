@@ -282,7 +282,7 @@ namespace Terminal.Gui {
 				} else if (SuperView?.tabIndexes == null || SuperView?.tabIndexes.Count == 1) {
 					tabIndex = 0;
 					return;
-				} else if (tabIndex == value) {
+				} else if (tabIndex == value && TabIndexes.IndexOf (this) == value) {
 					return;
 				}
 				tabIndex = value > SuperView.tabIndexes.Count - 1 ? SuperView.tabIndexes.Count - 1 : value < 0 ? 0 : value;
@@ -393,6 +393,10 @@ namespace Terminal.Gui {
 									view.addingView = false;
 								}
 							}
+						}
+
+						if (SuperView is Toplevel && Application.Current?.Focused != SuperView) {
+							Application.EnsuresTopOnFront ();
 						}
 					}
 					OnCanFocusChanged ();
@@ -1500,8 +1504,11 @@ namespace Terminal.Gui {
 				(GetType ().IsNestedPublic && !IsOverridden (this, "Redraw") || GetType ().Name == "View") &&
 				(!NeedDisplay.IsEmpty || ChildNeedsDisplay || LayoutNeeded)) {
 
-				Clear ();
-				SetChildNeedsDisplay ();
+				if (ColorScheme != null) {
+					Driver.SetAttribute (GetNormalColor ());
+					Clear ();
+					SetChildNeedsDisplay ();
+				}
 			}
 
 			if (!ustring.IsNullOrEmpty (TextFormatter.Text)) {
@@ -1540,7 +1547,7 @@ namespace Terminal.Gui {
 			OnDrawContent (bounds);
 
 			if (subviews != null) {
-				foreach (var view in subviews) {
+				foreach (var view in subviews.ToList()) {
 					if (!view.NeedDisplay.IsEmpty || view.ChildNeedsDisplay || view.LayoutNeeded) {
 						if (view.Frame.IntersectsWith (clipRect) && (view.Frame.IntersectsWith (bounds) || bounds.X < 0 || bounds.Y < 0)) {
 							if (view.LayoutNeeded)
@@ -2913,9 +2920,14 @@ namespace Terminal.Gui {
 				return false;
 			}
 
-			var args = new MouseEventArgs (mouseEvent);
-			if (OnMouseClick (args))
-				return true;
+			if ((mouseEvent.Flags & MouseFlags.Button1Clicked) != 0 || (mouseEvent.Flags & MouseFlags.Button2Clicked) != 0
+				|| (mouseEvent.Flags & MouseFlags.Button3Clicked) != 0 || (mouseEvent.Flags & MouseFlags.Button4Clicked) != 0) {
+
+				var args = new MouseEventArgs (mouseEvent);
+				if (OnMouseClick (args)) {
+					return true;
+				}
+			}
 			if (MouseEvent (mouseEvent))
 				return true;
 

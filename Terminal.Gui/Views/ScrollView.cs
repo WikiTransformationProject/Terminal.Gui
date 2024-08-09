@@ -358,7 +358,7 @@ namespace Terminal.Gui {
 		{
 			Driver.SetAttribute (GetNormalColor ());
 			SetViewsNeedsDisplay ();
-			//Clear ();
+			Clear ();
 
 			var savedClip = ClipToBounds ();
 			OnDrawContent (new Rect (ContentOffset,

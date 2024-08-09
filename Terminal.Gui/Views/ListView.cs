@@ -601,10 +601,12 @@ namespace Terminal.Gui {
 		/// <returns></returns>
 		public virtual bool MoveEnd ()
 		{
-			if (source.Count > 0 && selected != source.Count - 1) {
+			if (source?.Count > 0 && selected != source.Count - 1) {
 				selected = source.Count - 1;
 				if (top + selected > Frame.Height - 1) {
-					top = selected;
+					top = selected < Frame.Height - 1
+						? Math.Max (Frame.Height - selected + 1, 0)
+						: Math.Max (selected - Frame.Height + 1, 0);
 				}
 				OnSelectedChanged ();
 				SetNeedsDisplay ();
@@ -749,6 +751,11 @@ namespace Terminal.Gui {
 		public void EnsureSelectedItemVisible ()
 		{
 			SuperView?.LayoutSubviews ();
+			// If last item is selected and is removed, ensures a valid selected item
+			if (Source != null && selected > Source.Count - 1) {
+				SelectedItem = Source.Count - 1;
+				SetNeedsDisplay ();
+			}
 			if (selected < top) {
 				top = selected;
 			} else if (Frame.Height > 0 && selected >= top + Frame.Height) {
@@ -802,8 +809,6 @@ namespace Terminal.Gui {
 			selected = top + me.Y;
 			if (AllowsAll ()) {
 				Source.SetMark (SelectedItem, !Source.IsMarked (SelectedItem));
-				SetNeedsDisplay ();
-				return true;
 			}
 			OnSelectedChanged ();
 			SetNeedsDisplay ();
@@ -833,10 +838,29 @@ namespace Terminal.Gui {
 		}
 
 		/// <inheritdoc/>
-		public int Count => src != null ? src.Count : 0;
+		public int Count {
+			get {
+				CheckAndResizeMarksIfRequired ();
+				return src?.Count ?? 0;
+			}
+		}
 
 		/// <inheritdoc/>
 		public int Length => len;
+
+		void CheckAndResizeMarksIfRequired ()
+		{
+			if (src != null && count != src.Count) {
+				count = src.Count;
+				BitArray newMarks = new BitArray (count);
+				for (var i = 0; i < Math.Min (marks.Length, newMarks.Length); i++) {
+					newMarks [i] = marks [i];
+				}
+				marks = newMarks;
+
+				len = GetMaxLengthItem ();
+			}
+		}
 
 		int GetMaxLengthItem ()
 		{
@@ -866,7 +890,8 @@ namespace Terminal.Gui {
 
 		void RenderUstr (ConsoleDriver driver, ustring ustr, int col, int line, int width, int start = 0)
 		{
-			var u = TextFormatter.ClipAndJustify (ustr, width + start, TextAlignment.Left);
+			ustring str = start > ustr.ConsoleWidth ? string.Empty : ustr.Substring (Math.Min (start, ustr.ToRunes ().Length - 1));
+			ustring u = TextFormatter.ClipAndJustify (str, width, TextAlignment.Left);
 			driver.AddStr (u);
 			width -= TextFormatter.GetTextWidth (u);
 			while (width-- + start > 0) {
@@ -877,8 +902,8 @@ namespace Terminal.Gui {
 		/// <inheritdoc/>
 		public void Render (ListView container, ConsoleDriver driver, bool marked, int item, int col, int line, int width, int start = 0)
 		{
-			var savedClip = container.ClipToBounds();
-			container.Move (col - start, line);
+			var savedClip = container.ClipToBounds ();
+			container.Move (Math.Max (col - start, 0), line);
 			var t = src? [item];
 			if (t == null) {
 				RenderUstr (driver, ustring.Make (""), col, line, width);
@@ -897,7 +922,7 @@ namespace Terminal.Gui {
 		/// <inheritdoc/>
 		public bool IsMarked (int item)
 		{
-			if (item >= 0 && item < count)
+			if (item >= 0 && item < Count)
 				return marks [item];
 			return false;
 		}
@@ -905,7 +930,7 @@ namespace Terminal.Gui {
 		/// <inheritdoc/>
 		public void SetMark (int item, bool value)
 		{
-			if (item >= 0 && item < count)
+			if (item >= 0 && item < Count)
 				marks [item] = value;
 		}
 

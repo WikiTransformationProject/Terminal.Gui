@@ -300,16 +300,16 @@ namespace Terminal.Gui.ViewTests {
 			Assert.Equal (19, lv.SelectedItem);
 			TestHelpers.AssertDriverContentsWithFrameAre (@"
 ┌──────────┐
+│Line10    │
+│Line11    │
+│Line12    │
+│Line13    │
+│Line14    │
+│Line15    │
+│Line16    │
+│Line17    │
+│Line18    │
 │Line19    │
-│          │
-│          │
-│          │
-│          │
-│          │
-│          │
-│          │
-│          │
-│          │
 └──────────┘", output);
 
 			Assert.True (lv.ScrollUp (20));
@@ -544,6 +544,25 @@ Item 6", output);
  tem 2
  tem 3
  tem 4", output);
+		}
+
+		[Fact]
+		public void SelectedItemChanged_Event_Is_Also_Raised_With_AllowsMarking_True_By_Keyboard_Or_Mouse ()
+		{
+			var itemChanged = 0;
+			var lv = new ListView (new List<string> () { "Item1", "Item2", "Item3" }) { Width = 5, Height = 3, AllowsMarking = true };
+			lv.SelectedItemChanged += (e) => itemChanged = e.Item;
+
+			Assert.Equal (0, lv.SelectedItem);
+			Assert.Equal (lv.SelectedItem, itemChanged);
+
+			Assert.True (lv.ProcessKey (new KeyEvent (Key.CursorDown, new KeyModifiers())));
+			Assert.Equal (1, lv.SelectedItem);
+			Assert.Equal (lv.SelectedItem, itemChanged);
+
+			Assert.True (lv.MouseEvent (new MouseEvent(){ X = 0, Y = 2, Flags = MouseFlags.Button1Clicked}));
+			Assert.Equal (2, lv.SelectedItem);
+			Assert.Equal (lv.SelectedItem, itemChanged);
 		}
 	}
 }
