@@ -20,7 +20,7 @@
     <DebugType>portable</DebugType>
   </PropertyGroup>
   <PropertyGroup>
-    <TargetFrameworks>net472;netstandard2.1;net6.0</TargetFrameworks>
+    <TargetFrameworks>net472;netstandard2.1;net8.0</TargetFrameworks>
     <RootNamespace>Terminal.Gui</RootNamespace>
     <AssemblyName>Terminal.Gui</AssemblyName>
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
@@ -32,7 +32,7 @@
     <PackageReference Include="NStack.Core" Version="1.1.1" />
     <PackageReference Include="System.Management" Version="7.0.2" />
     <!-- Enable Nuget Source Link for github -->
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
     <InternalsVisibleTo Include="UnitTests" />
   </ItemGroup>
   <PropertyGroup>
