@@ -243,36 +243,41 @@ namespace Terminal.Gui {
 		/// </remarks>
 		public void Pulse ()
 		{
-			// HEU: adding activityPos.Length == 0 check as there was a case where the array was empty, leading to IndexOutOfRangeException below
-			if (activityPos == null || activityPos.Length == 0) {
-				PopulateActivityPos ();
-			}
-			if (!isActivity) {
-				isActivity = true;
-				delta = 1;
-			} else {
-				for (int i = 0; i < activityPos.Length; i++) {
-					activityPos [i] += delta;
+			try {
+				// HEU: adding activityPos.Length == 0 check as there was a case where the array was empty, leading to IndexOutOfRangeException below
+				if (activityPos == null || activityPos.Length == 0) {
+					PopulateActivityPos ();
 				}
-				int fWidth = GetFrameWidth ();
-				if (activityPos [activityPos.Length - 1] < 0) {
-					for (int i = 0; i < activityPos.Length; i++) {
-						activityPos [i] = i - activityPos.Length + 2;
-					}
+				if (!isActivity) {
+					isActivity = true;
 					delta = 1;
-				} else if (activityPos [0] >= fWidth) {
-					if (bidirectionalMarquee) {
+				} else {
+					for (int i = 0; i < activityPos.Length; i++) {
+						activityPos [i] += delta;
+					}
+					int fWidth = GetFrameWidth ();
+					if (activityPos [activityPos.Length - 1] < 0) {
 						for (int i = 0; i < activityPos.Length; i++) {
-							activityPos [i] = fWidth + i - 2;
+							activityPos [i] = i - activityPos.Length + 2;
 						}
-						delta = -1;
-					} else {
-						PopulateActivityPos ();
+						delta = 1;
+					} else if (activityPos [0] >= fWidth) {
+						if (bidirectionalMarquee) {
+							for (int i = 0; i < activityPos.Length; i++) {
+								activityPos [i] = fWidth + i - 2;
+							}
+							delta = -1;
+						} else {
+							PopulateActivityPos ();
+						}
 					}
 				}
-			}
 
-			SetNeedsDisplay ();
+				SetNeedsDisplay ();
+			} catch 
+			{
+				//  HEU: ignore errors to not crash UI as sometimes still an index out of bounds happens
+			}
 		}
 
 		///<inheritdoc/>
