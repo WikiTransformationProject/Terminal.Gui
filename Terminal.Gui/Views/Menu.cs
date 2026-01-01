@@ -1238,10 +1238,13 @@ namespace Terminal.Gui {
 				mi = openCurrentMenu.barItems.Children [openCurrentMenu.current];
 			} else if (openCurrentMenu.barItems.IsTopLevel) {
 				mi = openCurrentMenu.barItems;
-			} else {
+			} else if (openMenu.current > -1) {
 				mi = openMenu.barItems.Children [openMenu.current];
 			}
-			MenuOpened?.Invoke (mi);
+
+			if (null != mi) {
+				MenuOpened?.Invoke (mi);
+			}
 		}
 
 		/// <summary>
