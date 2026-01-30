@@ -268,6 +268,8 @@ namespace Terminal.Gui {
 			}
 		}
 
+		static readonly Terminal.Gui.Attribute selectedItemColor = new Terminal.Gui.Attribute(Color.Black, Color.BrightYellow);
+
 		public override void Redraw (Rect bounds)
 		{
 			var current = ColorScheme.Focus;
@@ -281,7 +283,7 @@ namespace Terminal.Gui {
 			for (int row = 0; row < f.Height; row++, item++) {
 				bool isSelected = item == selected;
 				Move (0, row);
-				var newcolor = focused ? (isSelected ? ColorScheme.HotNormal : ColorScheme.Focus)
+				var newcolor = focused ? (isSelected ? selectedItemColor : ColorScheme.Focus)
 					: Enabled ? ColorScheme.Focus : ColorScheme.Disabled;
 				if (newcolor != current) {
 					Driver.SetAttribute (newcolor);
