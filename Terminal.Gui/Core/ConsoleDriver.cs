@@ -1262,7 +1262,7 @@ namespace Terminal.Gui {
 		/// <summary>
 		/// Un-checked checkmark.
 		/// </summary>
-		public Rune UnChecked = '\u2574';
+		public Rune UnChecked = '\u25a1';
 
 		/// <summary>
 		/// Selected mark.
