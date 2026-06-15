@@ -395,8 +395,13 @@ namespace Terminal.Gui {
 								Curses.ungetch (27); // Esc
 								return;
 							} else {
-								throw new Exception ();
+								// written by LLM, 2026-06-15
+								// Local fork fix (not in upstream v1): fast typing or paste queues the next key
+								// right behind a code key (e.g. Backspace), and the extra get_wch above reads it.
+								// Put that key back so it is handled as its own keypress instead of crashing here.
+								Curses.ungetch (wch);
 							}
+							break;
 						}
 					}
 				}
