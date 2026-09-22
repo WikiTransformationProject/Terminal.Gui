@@ -1445,6 +1445,8 @@ namespace Terminal.Gui {
 		/// <param name="args"></param>
 		protected virtual void OnCellActivated (CellActivatedEventArgs args)
 		{
+			// written by LLM, 2026-09-22
+			ReportUserAction ("Open row", (args.Row + 1).ToString ());
 			CellActivated?.Invoke (args);
 		}
 

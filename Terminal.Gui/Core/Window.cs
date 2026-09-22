@@ -22,6 +22,8 @@ namespace Terminal.Gui {
 	/// API to determine this rectangle.
 	/// </remarks>
 	public class Window : Toplevel {
+		public override string UserActionContext => Title?.ToString () ?? string.Empty;
+
 		View contentView;
 		ustring title = ustring.Empty;
 

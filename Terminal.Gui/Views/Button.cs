@@ -235,6 +235,9 @@ namespace Terminal.Gui {
 		/// </summary>
 		public virtual void OnClicked ()
 		{
+			// written by LLM, 2026-09-22
+			// covered by ButtonMarkerComesBeforeTheAction
+			ReportUserAction ("Button", Text?.ToString () ?? string.Empty);
 			Clicked?.Invoke ();
 		}
 

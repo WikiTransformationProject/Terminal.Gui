@@ -35,6 +35,8 @@ namespace Terminal.Gui {
 	///   </para>
 	/// </remarks>
 	public class Toplevel : View {
+		public override string UserActionContext => string.Empty;
+
 		/// <summary>
 		/// Gets or sets whether the <see cref="MainLoop"/> for this <see cref="Toplevel"/> is running or not. 
 		/// </summary>
@@ -531,6 +533,8 @@ namespace Terminal.Gui {
 
 		private void QuitToplevel ()
 		{
+			// written by LLM, 2026-09-22
+			ReportUserAction ("Close window", Application.QuitKey.ToString ());
 			if (IsMdiChild) {
 				RequestStop ();
 			} else if (Application.MdiTop != null) {

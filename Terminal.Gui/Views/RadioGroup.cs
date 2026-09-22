@@ -314,7 +314,8 @@ namespace Terminal.Gui {
 							nextIsHot = true;
 						} else {
 							if ((nextIsHot && Rune.ToUpper (c) == key) || (key == (uint)hotKey)) {
-								SelectedItem = i;
+								// written by LLM, 2026-09-22
+								SelectUserItem (i);
 								cursor = i;
 								if (!HasFocus)
 									SetFocus ();
@@ -339,9 +340,20 @@ namespace Terminal.Gui {
 			return base.ProcessKey (kb);
 		}
 
+		// written by LLM, 2026-09-22
+		void SelectUserItem (int item)
+		{
+			// covered by RadioChangesFromCodeDoNotCreateUserActions
+			if (item != SelectedItem && item >= 0 && item < radioLabels.Count) {
+				ReportUserAction ("Select option", radioLabels [item].ToString ());
+			}
+			SelectedItem = item;
+		}
+
 		void SelectItem ()
 		{
-			SelectedItem = cursor;
+			// written by LLM, 2026-09-22
+			SelectUserItem (cursor);
 		}
 
 		void MoveEnd ()
@@ -393,7 +405,9 @@ namespace Terminal.Gui {
 			if (pos < rCount) {
 				var c = displayMode == DisplayModeLayout.Horizontal ? horizontal.FindIndex ((x) => x.pos <= me.X && x.pos + x.length - 2 >= me.X) : me.Y;
 				if (c > -1) {
-					cursor = SelectedItem = c;
+					// written by LLM, 2026-09-22
+					SelectUserItem (c);
+					cursor = c;
 					SetNeedsDisplay ();
 				}
 			}

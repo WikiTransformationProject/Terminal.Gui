@@ -132,6 +132,19 @@ namespace Terminal.Gui {
 		/// <value>Method to invoke.</value>
 		public Action Action { get; set; }
 
+		// written by LLM, 2026-09-22
+		internal Action GetActionForUser ()
+		{
+			var action = Action;
+			if (null == action) {
+				return null;
+			}
+			return () => {
+				Application.Current?.ReportUserAction ("Menu", Title?.ToString () ?? string.Empty);
+				action ();
+			};
+		}
+
 		/// <summary>
 		/// Gets or sets the action to be invoked to determine if the menu can be triggered. If <see cref="CanExecute"/> returns <see langword="true"/>
 		/// the menu item will be enabled. Otherwise, it will be disabled. 
@@ -646,9 +659,11 @@ namespace Terminal.Gui {
 		void RunSelected ()
 		{
 			if (barItems.IsTopLevel) {
-				Run (barItems.Action);
+				// written by LLM, 2026-09-22
+				Run (barItems.GetActionForUser ());
 			} else if (current > -1 && barItems.Children [current].Action != null) {
-				Run (barItems.Children [current].Action);
+				// written by LLM, 2026-09-22
+				Run (barItems.Children [current].GetActionForUser ());
 			} else if (current == 0 && host.UseSubMenusSingleFrame
 				&& barItems.Children [current].Parent.Parent != null) {
 
@@ -1150,7 +1165,8 @@ namespace Terminal.Gui {
 
 		void Selected (MenuItem item)
 		{
-			var action = item.Action;
+			// written by LLM, 2026-09-22
+			var action = item.GetActionForUser ();
 
 			if (action == null)
 				return;
@@ -1709,7 +1725,8 @@ namespace Terminal.Gui {
 				if (p != -1 && p + 1 < mi.Title.RuneCount) {
 					if (Char.ToUpperInvariant ((char)mi.Title [p + 1]) == c) {
 						if (mi.IsEnabled ()) {
-							var action = mi.Action;
+							// written by LLM, 2026-09-22
+							var action = mi.GetActionForUser ();
 							if (action != null) {
 								Run (action);
 							}
@@ -1745,7 +1762,8 @@ namespace Terminal.Gui {
 				}
 				if ((!(mi is MenuBarItem mbiTopLevel) || mbiTopLevel.IsTopLevel) && mi.Shortcut != Key.Null && mi.Shortcut == (Key)key) {
 					if (mi.IsEnabled ()) {
-						var action = mi.Action;
+						// written by LLM, 2026-09-22
+						var action = mi.GetActionForUser ();
 						if (action != null) {
 							Run (action);
 						}
@@ -1768,7 +1786,8 @@ namespace Terminal.Gui {
 
 			if (mi.IsTopLevel) {
 				var menu = new Menu (this, i, 0, mi);
-				menu.Run (mi.Action);
+				// written by LLM, 2026-09-22
+				menu.Run (mi.GetActionForUser ());
 				menu.Dispose ();
 			} else {
 				openedByHotKey = true;
@@ -1890,7 +1909,8 @@ namespace Terminal.Gui {
 						if (me.Flags == MouseFlags.Button1Clicked) {
 							if (Menus [i].IsTopLevel) {
 								var menu = new Menu (this, i, 0, Menus [i]);
-								menu.Run (Menus [i].Action);
+								// written by LLM, 2026-09-22
+								menu.Run (Menus [i].GetActionForUser ());
 								menu.Dispose ();
 							} else if (!IsMenuOpen) {
 								Activate (i);

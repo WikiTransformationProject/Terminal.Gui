@@ -18,6 +18,8 @@ namespace Terminal.Gui {
 	/// a GroupBox in Windows.
 	/// </summary>
 	public class FrameView : View {
+		public override string UserActionContext => Title?.ToString () ?? string.Empty;
+
 		View contentView;
 		ustring title;
 

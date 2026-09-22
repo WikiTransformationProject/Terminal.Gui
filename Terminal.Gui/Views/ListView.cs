@@ -466,6 +466,8 @@ namespace Terminal.Gui {
 		public virtual bool MarkUnmarkRow ()
 		{
 			if (AllowsAll ()) {
+				// written by LLM, 2026-09-22
+				ReportUserAction ("Mark row", $"{SelectedItem + 1}: {!Source.IsMarked (SelectedItem)}");
 				Source.SetMark (SelectedItem, !Source.IsMarked (SelectedItem));
 				SetNeedsDisplay ();
 				return true;
@@ -709,6 +711,8 @@ namespace Terminal.Gui {
 
 			var value = source.ToList () [selected];
 
+			// written by LLM, 2026-09-22
+			ReportUserAction ("Open row", (selected + 1).ToString ());
 			OpenSelectedItem?.Invoke (new ListViewItemEventArgs (selected, value));
 
 			return true;
@@ -808,6 +812,8 @@ namespace Terminal.Gui {
 
 			selected = top + me.Y;
 			if (AllowsAll ()) {
+				// written by LLM, 2026-09-22
+				ReportUserAction ("Mark row", $"{SelectedItem + 1}: {!Source.IsMarked (SelectedItem)}");
 				Source.SetMark (SelectedItem, !Source.IsMarked (SelectedItem));
 			}
 			OnSelectedChanged ();

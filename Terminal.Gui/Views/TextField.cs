@@ -28,6 +28,7 @@ namespace Terminal.Gui {
 		ustring selectedText;
 		HistoryText historyText = new HistoryText ();
 		CultureInfo currentCulture;
+		bool textChangedByUser;
 
 		/// <summary>
 		/// Tracks whether the text field should be considered "used", that is, that the user has moved in the entry, so new input should be appended at the cursor position, rather than clearing the entry
@@ -252,6 +253,12 @@ namespace Terminal.Gui {
 		///<inheritdoc/>
 		public override bool OnLeave (View view)
 		{
+			// written by LLM, 2026-09-22
+			// covered by TextEditsAreLoggedOnceWithoutTheirValues
+			if (textChangedByUser) {
+				textChangedByUser = false;
+				ReportUserAction ("Edit field", Id?.ToString () ?? string.Empty);
+			}
 			if (Application.MouseGrabView != null && Application.MouseGrabView == this)
 				Application.UngrabMouse ();
 			//if (SelectedLength != 0 && !(Application.MouseGrabView is MenuBar))
@@ -553,7 +560,18 @@ namespace Terminal.Gui {
 		///    </item>
 		/// </list>
 		/// </remarks>
+		// written by LLM, 2026-09-22
 		public override bool ProcessKey (KeyEvent kb)
+		{
+			var previousText = Text;
+			var handled = ProcessEditKey (kb);
+			if (Text != previousText) {
+				textChangedByUser = true;
+			}
+			return handled;
+		}
+
+		bool ProcessEditKey (KeyEvent kb)
 		{
 			// remember current cursor position
 			// because the new calculated cursor position is needed to be set BEFORE the change event is triggest

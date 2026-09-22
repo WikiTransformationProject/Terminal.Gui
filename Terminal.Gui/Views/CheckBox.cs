@@ -158,6 +158,8 @@ namespace Terminal.Gui {
 			if (!HasFocus) {
 				SetFocus ();
 			}
+			// written by LLM, 2026-09-22
+			ReportUserAction ("Check box", $"{Text}: {!Checked}");
 			var previousChecked = Checked;
 			Checked = !Checked;
 			OnToggled (previousChecked);
@@ -172,6 +174,8 @@ namespace Terminal.Gui {
 				return false;
 
 			SetFocus ();
+			// written by LLM, 2026-09-22
+			ReportUserAction ("Check box", $"{Text}: {!Checked}");
 			var previousChecked = Checked;
 			Checked = !Checked;
 			OnToggled (previousChecked);

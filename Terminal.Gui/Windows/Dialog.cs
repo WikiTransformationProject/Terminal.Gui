@@ -230,6 +230,8 @@ namespace Terminal.Gui {
 		{
 			switch (kb.Key) {
 			case Key.Esc:
+				// written by LLM, 2026-09-22
+				ReportUserAction ("Close dialog", "Escape");
 				Application.RequestStop (this);
 				return true;
 			}

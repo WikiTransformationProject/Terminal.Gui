@@ -31,6 +31,16 @@ namespace Terminal.Gui {
 		TabContentView contentView;
 		private List<Tab> tabs = new List<Tab> ();
 
+		// written by LLM, 2026-09-22
+		private void SelectTab (Tab tab, bool fromUser)
+		{
+			if (fromUser && null != tab && tab != SelectedTab) {
+				ReportUserAction ("Select tab", tab.Text?.ToString () ?? string.Empty);
+			}
+			SelectedTab = tab;
+		}
+
+
 		/// <summary>
 		/// All tabs currently hosted by the control
 		/// </summary>
@@ -135,10 +145,11 @@ namespace Terminal.Gui {
 			base.Add (contentView);
 
 			// Things this view knows how to do
-			AddCommand (Command.Left, () => { SwitchTabBy (-1); return true; });
-			AddCommand (Command.Right, () => { SwitchTabBy (1); return true; });
-			AddCommand (Command.LeftHome, () => { SelectedTab = Tabs.FirstOrDefault (); return true; });
-			AddCommand (Command.RightEnd, () => { SelectedTab = Tabs.LastOrDefault (); return true; });
+			// written by LLM, 2026-09-22
+			AddCommand (Command.Left, () => { SwitchTabBy (-1, true); return true; });
+			AddCommand (Command.Right, () => { SwitchTabBy (1, true); return true; });
+			AddCommand (Command.LeftHome, () => { SelectTab (Tabs.FirstOrDefault (), true); return true; });
+			AddCommand (Command.RightEnd, () => { SelectTab (Tabs.LastOrDefault (), true); return true; });
 
 
 			// Default keybindings for this view
@@ -264,7 +275,13 @@ namespace Terminal.Gui {
 		/// the first tab will become selected
 		/// </summary>
 		/// <param name="amount"></param>
+		// written by LLM, 2026-09-22
 		public void SwitchTabBy (int amount)
+		{
+			SwitchTabBy (amount, false);
+		}
+
+		private void SwitchTabBy (int amount, bool fromUser)
 		{
 			if (Tabs.Count == 0) {
 				return;
@@ -272,7 +289,8 @@ namespace Terminal.Gui {
 
 			// if there is only one tab anyway or nothing is selected
 			if (Tabs.Count == 1 || SelectedTab == null) {
-				SelectedTab = Tabs.ElementAt (0);
+				// written by LLM, 2026-09-22
+				SelectTab (Tabs.ElementAt (0), fromUser);
 				SetNeedsDisplay ();
 				return;
 			}
@@ -281,14 +299,16 @@ namespace Terminal.Gui {
 
 			// Currently selected tab has vanished!
 			if (currentIdx == -1) {
-				SelectedTab = Tabs.ElementAt (0);
+				// written by LLM, 2026-09-22
+				SelectTab (Tabs.ElementAt (0), fromUser);
 				SetNeedsDisplay ();
 				return;
 			}
 
 			var newIdx = Math.Max (0, Math.Min (currentIdx + amount, Tabs.Count - 1));
 
-			SelectedTab = tabs [newIdx];
+			// written by LLM, 2026-09-22
+			SelectTab (tabs [newIdx], fromUser);
 			SetNeedsDisplay ();
 
 			EnsureSelectedTabIsVisible ();
@@ -717,7 +737,8 @@ namespace Terminal.Gui {
 
 					if (scrollIndicatorHit != 0) {
 
-						host.SwitchTabBy (scrollIndicatorHit);
+						// written by LLM, 2026-09-22
+						host.SwitchTabBy (scrollIndicatorHit, true);
 
 						SetNeedsDisplay ();
 						return true;
@@ -725,7 +746,8 @@ namespace Terminal.Gui {
 
 
 					if (hit != null) {
-						host.SelectedTab = hit;
+						// written by LLM, 2026-09-22
+						host.SelectTab (hit, true);
 						SetNeedsDisplay ();
 						return true;
 					}
