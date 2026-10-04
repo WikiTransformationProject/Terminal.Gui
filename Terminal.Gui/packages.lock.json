@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net8.0": {
+      "NStack.Core": {
+        "type": "Direct",
+        "requested": "[1.1.1, )",
+        "resolved": "1.1.1",
+        "contentHash": "5LhlYsmAe3A55zl8xCSD7AbuhDqZODpsfdMGgtygeBlHZmlb0tHmK5/PeKODnwYUhC6EbL2qHKGskPNvpY+z3w==",
+        "dependencies": {
+          "System.ValueTuple": "4.5.0"
+        }
+      },
+      "System.Management": {
+        "type": "Direct",
+        "requested": "[7.0.2, )",
+        "resolved": "7.0.2",
+        "contentHash": "/qEUN91mP/MUQmJnM5y5BdT7ZoPuVrtxnFlbJ8a3kBJGhe2wCzBfnPFtK2wTtEEcf3DMGR9J00GZZfg6HRI6yA==",
+        "dependencies": {
+          "System.CodeDom": "7.0.0"
+        }
+      },
+      "System.CodeDom": {
+        "type": "Transitive",
+        "resolved": "7.0.0",
+        "contentHash": "GLltyqEsE5/3IE+zYRP5sNa1l44qKl9v+bfdMcwg+M9qnQf47wK3H0SUR/T+3N4JEQXF3vV4CSuuo0rsg+nq2A=="
+      },
+      "System.ValueTuple": {
+        "type": "Transitive",
+        "resolved": "4.5.0",
+        "contentHash": "okurQJO6NRE/apDIP23ajJ0hpiNmJ+f0BwOlB/cSqTLQlw5upkf+5+96+iG2Jw40G1fCVCyPz/FhIABUjMR+RQ=="
+      }
+    }
+  }
+}

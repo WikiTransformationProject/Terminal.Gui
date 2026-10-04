@@ -21,6 +21,11 @@
   </PropertyGroup>
   <PropertyGroup>
     <TargetFrameworks>net8.0</TargetFrameworks>
+    <!-- v============= HEU/LLM: Keep package locks and audit all dependencies; keep SourceLink off. ========== -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
+    <!-- ^=================================================================== -->
     <RootNamespace>Terminal.Gui</RootNamespace>
     <AssemblyName>Terminal.Gui</AssemblyName>
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
@@ -31,8 +36,10 @@
   <ItemGroup>
     <PackageReference Include="NStack.Core" Version="1.1.1" />
     <PackageReference Include="System.Management" Version="7.0.2" />
-    <!-- Enable Nuget Source Link for github -->
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+    <!-- v============= HEU/LLM: Keep the SourceLink package reference off. ========== -->
+    <!-- SourceLink stays off for the product build. -->
+    <!-- <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" /> -->
+    <!-- ^=================================================================== -->
     <InternalsVisibleTo Include="UnitTests" />
   </ItemGroup>
   <PropertyGroup>
@@ -98,7 +105,9 @@
     <!-- Embed source files that are not tracked by the source control manager in the PDB -->
     <GitRepositoryRemoteName>upstream</GitRepositoryRemoteName>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <EnableSourceLink>true</EnableSourceLink>
+    <!-- v============= HEU/LLM: Keep SourceLink off. ========== -->
+    <EnableSourceLink>false</EnableSourceLink>
+    <!-- ^=================================================================== -->
     <!--<DebugType>Embedded</DebugType>-->
     <!--<AssemblyOriginatorKeyFile>Terminal.Gui.snk</AssemblyOriginatorKeyFile>-->
   </PropertyGroup>
