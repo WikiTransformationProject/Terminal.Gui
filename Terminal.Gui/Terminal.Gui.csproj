@@ -35,7 +35,6 @@
   <!-- =================================================================== -->
   <ItemGroup>
     <PackageReference Include="NStack.Core" Version="1.1.1" />
-    <PackageReference Include="System.Management" Version="7.0.2" />
     <!-- v============= HEU/LLM: Keep the SourceLink package reference off. ========== -->
     <!-- SourceLink stays off for the product build. -->
     <!-- <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" /> -->
